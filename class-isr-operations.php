@@ -1,199 +1,199 @@
-<?php
+<?php /** @noinspection SqlResolve */
 
-class ISROps {
+	/** @noinspection SqlNoDataSourceInspection */
 
-    //Get appointment invite details
-    function GetInvites( $start_date, $end_date ){
+	class ISROps {
 
-        $finalEntries = array();
+		//Get appointment invite details
+		function GetInvites( $start_date, $end_date ): array|WP_Error {
 
-        $ciFormID = get_option( 'ci_form_id' );
+			if ( ! $start_date ) {
+				$start_date = date( 'Y-m-d', strtotime( 'January 1, 2020' ) );
+			}
 
-        $searchCriteria = array();
-        
-        $searchCriteria['start_date'] = $start_date;
-        $searchCriteria['end_date'] = $end_date;
+			if ( ! $end_date ) {
+				$end_date = date( 'Y-m-d', strtotime( 'today' ) );
+			}
 
-        $allEntries = GFAPI::get_entries( $ciFormID, $searchCriteria, null, array('offset' => 0, 'page_size' => 1000) );
+			// Manually set this for now for TJG purposes @TODO: Re-enable this setting
+			$ciFormID = get_option( 'ci_form_id' );
 
-        return $allEntries;//$finalEntries;
+			if ( $ciFormID != 14 ) {
+				$ciFormID = 14;
+			}
 
-    }
+			$searchCriteria = array();
 
-    //Get agent specific data on presentations
-    function GetPresentations( $start_date, $end_date ){
+			$searchCriteria['start_date'] = $start_date;
+			$searchCriteria['end_date']   = $end_date;
 
-        $finalPresentations = array();
+			return GFAPI::get_entries( $ciFormID, $searchCriteria, null, array( 'offset' => 0, 'page_size' => 1000 ) );
 
-        $wcnFormID = get_option( 'wcn_form_id' );
+		}
 
-        $searchCriteria = array();
-        
-        $searchCriteria['start_date'] = $start_date;
-        $searchCriteria['end_date'] = $end_date;
+		//Get agent specific data on presentations
+		function GetPresentations( $start_date, $end_date ): array|WP_Error {
+			if ( ! $start_date ) {
+				$start_date = date( 'Y-m-d', strtotime( 'January 1, 2020' ) );
+			}
 
-        $allPresentations = GFAPI::get_entries( $wcnFormID, $searchCriteria, null, array('offset' => 0, 'page_size' => 1000) );
+			if ( ! $end_date ) {
+				$end_date = date( 'Y-m-d', strtotime( 'today' ) );
+			}
 
-        return $allPresentations;
+			$wcnFormID = get_option( 'wcn_form_id' );
+			if ( $wcnFormID != 13 ) {
+				$wcnFormID = 13;
+			}
 
-    }
+			$searchCriteria = array();
 
-    //Get agents working under supervision of the crrent logged-in user
-    function GetWorkForce( $user_id ){
+			$searchCriteria['start_date'] = $start_date;
+			$searchCriteria['end_date']   = $end_date;
 
-        global $wpdb;
-        
-        $viewing_as = get_user_meta( $user_id, 'isr_view_sales_analysis_as', true );
+			return GFAPI::get_entries( $wcnFormID, $searchCriteria, null, array( 'offset' => 0, 'page_size' => 1000 ) );
 
-        if( $viewing_as == null || $viewing_as == '' ){
-            $viewing_as = $user_id;
-        }
-        
-        $user = get_user_by( 'id', $viewing_as );
-        
-        $user_agent_number = get_user_meta( $viewing_as, 'agent_number', true );
+		}
 
-        $user_position = strtolower( get_user_meta( $viewing_as, 'agent_position', true ) );
-        
-        $agentIDs = array();
+		//Get agents working under supervision of the currently logged-in user
+		function GetWorkForce( $user_id ): array {
 
-        $extraIDs = array();
+			global $wpdb;
+			if ( ! $user_id ) {
+				$user_id = get_current_user_id();
+			}
 
-        $extraIDsExt = array();
+			$viewing_as = $user_id;
+			//        $viewing_as = get_user_meta( $user_id, 'isr_view_sales_analysis_as', true );
 
-        $SAAgentNums = array();
+			$user              = get_user_by( 'id', $viewing_as );
+			$user_agent_number = get_user_meta( $viewing_as, 'agent_number', true );
 
-        $table = get_option( 'agents_table_name' );
+			$user_position = strtolower( get_user_meta( $viewing_as, 'agent_position', true ) );
 
-        //Add the logged in agent's details
-        array_push( $agentIDs, 
-            array( 
-                    'id' => $user_agent_number, 
-                    'name' => $user->first_name . ' ' . $user->last_name,
-                    'indent' => '0px',
-                    'parentID' => '',
-                    'position' => $user_position,
-                )
-        );        
+			$agentIDs    = array();
+			$SAAgentNums = array();
 
-        //Get Agents
-        $sa_agent_user_ids =   $wpdb->get_results(
-            "SELECT user_id FROM $wpdb->usermeta " . 
-            "WHERE meta_key = 'saNumber' AND meta_value = " . $user_agent_number
-        );
+//        $extraIDs = array();
 
-        
-        if( sizeof( $sa_agent_user_ids ) > 0 ){
-            
-            foreach( $sa_agent_user_ids as $sa_agent_user_id ){
-                
-                $agent = get_user_by( 'id', $sa_agent_user_id->user_id );
-                
-                $agent_number = get_user_meta( $sa_agent_user_id->user_id, 'agent_number', true );
-                
-                $user_position = strtolower( get_user_meta( $sa_agent_user_id->user_id, 'agent_position', true ) );
-                
-                $user_visibility = strtolower ( get_user_meta( $sa_agent_user_id->user_id, 'is_dashboard_visible', true ) );
-                
-                if ($user_visibility === 'false') {
-                    continue;
-                }
-    
-                array_push( $agentIDs, 
-                array( 
-                    'id' => $agent_number, 
-                            'name' => $agent->first_name . ' ' . $agent->last_name,
-                            'indent' => '20px',
-                            'parentID' => $user_agent_number,
-                            'position' => $user_position,
-                            )
-                );
-                
-                array_push( $SAAgentNums, $agent_number );
-                
-            }
- 
-            $extraIDs = $this->getRegularAgents( $SAAgentNums, '40px' );
+//        $extraIDsExt = array();
 
-            $juniorIDs = array();
 
-            foreach ( $extraIDs['ids'] as $agent ) {
-                if ($agent['position'] == 'junior partner') {
-                    array_push( $juniorIDs, $agent['id'] );  
-                }
-            }
+			//Add the logged in agent's details
+			$agentIDs[] = array(
+				'id'       => $user_agent_number,
+				'name'     => $user->first_name . ' ' . $user->last_name,
+				'indent'   => '0px',
+				'parentID' => '',
+				'position' => $user_position,
+			);
 
-            $extraIDsExt = $this->getRegularAgents( $juniorIDs, '60px' );
+			//Get Agents
+			$query             = "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = '%s' AND meta_value = %d";
+			$prepare           = $wpdb->prepare( $query, 'saNumber', $viewing_as );
+			$sa_agent_user_ids = $wpdb->get_results( $prepare );
 
-            // if( $user_position == 'agency owner' ){
+//
+//        $sa_agent_user_ids = $wpdb->get_results(
+//            "SELECT user_id FROM $wpdb->usermeta " .
+//            "WHERE meta_key = 'saNumber' AND meta_value = " . $user_agent_number
+//        );
 
-            //     $extraIDsExt = $this->getRegularAgents( $extraIDs[ 'extras' ], '60px' );
 
-            // }
+			if ( sizeof( $sa_agent_user_ids ) > 0 ) {
 
-            if( sizeof( $extraIDs ) > 0 ){
-                $agentIDs = array_merge( $agentIDs, $extraIDs[ 'ids' ] );
-            }
+				foreach ( $sa_agent_user_ids as $sa_agent_user_id ) {
 
-            if( sizeof( $extraIDsExt ) > 0 ){
-                $agentIDs = array_merge( $agentIDs, $extraIDsExt[ 'ids' ] );
-            }
+					$agent           = get_user_by( 'id', $sa_agent_user_id->user_id );
+					$agent_number    = get_user_meta( $sa_agent_user_id->user_id, 'agent_number', true );
+					$user_position   = strtolower( get_user_meta( $sa_agent_user_id->user_id, 'agent_position', true ) );
+					$user_visibility = strtolower( get_user_meta( $sa_agent_user_id->user_id, 'is_dashboard_visible', true ) );
 
-        }
-        
-        return $agentIDs;
+					if ( $user_visibility === 'false' || ! $user_visibility ) {
+						continue;
+					}
 
-    }
+					$agentIDs[] = array(
+						'id'       => $agent_number,
+						'name'     => $agent->first_name . ' ' . $agent->last_name,
+						'indent'   => '20px',
+						'parentID' => $user_agent_number,
+						'position' => $user_position,
+					);
 
-    function getRegularAgents( $nums, $indent ) {
-        
-        global $wpdb;
+					$SAAgentNums[] = $agent_number;
+				}
 
-        $extraIDsSub = array();
+				$extraIDs = $this->getRegularAgents( $SAAgentNums, '40px' );
 
-        $extraAgentNums = array();
+				$juniorIDs = array();
 
-        foreach( $nums as $num ){
+				foreach ( $extraIDs['ids'] as $agent ) {
+					if ( $agent['position'] == 'junior partner' ) {
+						$juniorIDs[] = $agent['id'];
+					}
+				}
 
-            $agent_user_ids =   $wpdb->get_results(
-                "SELECT user_id FROM " . $wpdb->prefix . "usermeta " . 
-                "WHERE meta_key='saNumber' AND meta_value='" . $num . "'"
-            );
+				$extraIDsExt = $this->getRegularAgents( $juniorIDs, '60px' );
 
-            foreach( $agent_user_ids as $agent_user_id ){
+				// if( $user_position == 'agency owner' ){
 
-                $agent = get_user_by( 'id', $agent_user_id->user_id );
+				//     $extraIDsExt = $this->getRegularAgents( $extraIDs[ 'extras' ], '60px' );
 
-                $agent_number = get_user_meta( $agent_user_id->user_id, 'agent_number', true );
+				// }
 
-                $user_position = strtolower( get_user_meta( $agent_user_id->user_id, 'agent_position', true ) );
+				if ( sizeof( $extraIDs ) > 0 ) {
+					$agentIDs = array_merge( $agentIDs, $extraIDs['ids'] );
+				}
 
-                $user_visibility = strtolower ( get_user_meta( $agent_user_id->user_id, 'is_dashboard_visible', true ) );
+				if ( sizeof( $extraIDsExt ) > 0 ) {
+					$agentIDs = array_merge( $agentIDs, $extraIDsExt['ids'] );
+				}
 
-                if ($user_visibility === 'false') {
-                    continue;
-                }
+			}
 
-                array_push( $extraIDsSub, 
-                    array( 
-                            'id' => $agent_number, 
-                            'name' => $agent->first_name . ' ' . $agent->last_name,
-                            'indent' => $indent,
-                            'parentID' => $num,
-                            'position' => $user_position,
-                        )
-                );
+			return $agentIDs;
 
-                array_push( $extraAgentNums, $agent_number );
+		}
 
-            }
+		function getRegularAgents( $nums, $indent ): array {
 
-        }
+			global $wpdb;
+			$table = $wpdb->prefix . 'usermeta';
 
-        return array( 'ids' => $extraIDsSub, 'extras' => $extraAgentNums );
+			$extraIDsSub = array();
 
-    }
+			$extraAgentNums = array();
 
-}
+			foreach ( $nums as $num ) {
 
-?>
+				$query          = "SELECT user_id FROM $table WHERE meta_key = '%s' AND meta_value = %s";
+				$prepare        = $wpdb->prepare( $query, 'agent_number', $num );
+				$agent_user_ids = $wpdb->get_results( $prepare );
+
+				foreach ( $agent_user_ids as $agent_user_id ) {
+
+					$agent = get_user_by( 'id', $agent_user_id->user_id );
+					$agent_number = get_user_meta( $agent_user_id->user_id, 'agent_number', true );
+					$user_position = strtolower( get_user_meta( $agent_user_id->user_id, 'agent_position', true ) );
+					$user_visibility = strtolower( get_user_meta( $agent_user_id->user_id, 'is_dashboard_visible', true ) );
+
+					if ( $user_visibility === 'false' ) {
+						continue;
+					}
+
+					$extraIDsSub[] = array(
+						'id'       => $agent_number,
+						'name'     => $agent->first_name . ' ' . $agent->last_name,
+						'indent'   => $indent,
+						'parentID' => $num,
+						'position' => $user_position,
+					);
+
+					$extraAgentNums[] = $agent_number;
+				}
+			}
+
+			return array( 'ids' => $extraIDsSub, 'extras' => $extraAgentNums );
+		}
+	}
