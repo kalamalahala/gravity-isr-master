@@ -1,199 +1,192 @@
-<?php
+<?php /** @noinspection SqlResolve */
 
-class ISROps {
+	/** @noinspection SqlNoDataSourceInspection */
 
-    //Get appointment invite details
-    function GetInvites( $start_date, $end_date ){
+	class ISROps {
 
-        $finalEntries = array();
+		//Get appointment invite details
+		function GetInvites( $start_date, $end_date ): WP_Error|array {
+			if ( empty( $start_date ) ) {
+				$start_date = date( 'Y-m-d', strtotime( 'January 1, 2020' ) );
+			}
+			if ( empty( $end_date ) ) {
+				$end_date = date( 'Y-m-d', strtotime( 'today' ) );
+			}
 
-        $ciFormID = get_option( 'ci_form_id' );
+			$ciFormID = get_option( 'ci_form_id' );
+			if ( empty( $ciFormID ) ) {
+				$ciFormID = 14;
+			}
 
-        $searchCriteria = array();
-        
-        $searchCriteria['start_date'] = $start_date;
-        $searchCriteria['end_date'] = $end_date;
+			$searchCriteria               = array();
+			$searchCriteria['start_date'] = $start_date;
+			$searchCriteria['end_date']   = $end_date;
 
-        $allEntries = GFAPI::get_entries( $ciFormID, $searchCriteria, null, array('offset' => 0, 'page_size' => 1000) );
+			return GFAPI::get_entries( $ciFormID, $searchCriteria, null, array( 'offset' => 0, 'page_size' => 1000 ) );
 
-        return $allEntries;//$finalEntries;
+		}
 
-    }
+		//Get agent specific data on presentations
+		function GetPresentations( $start_date, $end_date ): WP_Error|array {
+			if ( empty( $start_date ) ) {
+				$start_date = date( 'Y-m-d', strtotime( 'January 1, 2020' ) );
+			}
+			if ( empty( $end_date ) ) {
+				$end_date = date( 'Y-m-d', strtotime( 'today' ) );
+			}
 
-    //Get agent specific data on presentations
-    function GetPresentations( $start_date, $end_date ){
+			$wcnFormID = get_option( 'wcn_form_id' );
+			if ( empty( $wcnFormID ) ) {
+				$wcnFormID = 13;
+			}
 
-        $finalPresentations = array();
+			$searchCriteria               = array();
+			$searchCriteria['start_date'] = $start_date;
+			$searchCriteria['end_date']   = $end_date;
 
-        $wcnFormID = get_option( 'wcn_form_id' );
+			return GFAPI::get_entries( $wcnFormID, $searchCriteria, null, array( 'offset' => 0, 'page_size' => 1000 ) );
 
-        $searchCriteria = array();
-        
-        $searchCriteria['start_date'] = $start_date;
-        $searchCriteria['end_date'] = $end_date;
+		}
 
-        $allPresentations = GFAPI::get_entries( $wcnFormID, $searchCriteria, null, array('offset' => 0, 'page_size' => 1000) );
+		//Get agents working under supervision of the currently logged-in user
+		function GetWorkForce( $user_id = null ): array {
 
-        return $allPresentations;
+			if ( empty( $user_id ) ) {
+				$user_id = get_current_user_id();
+			}
+			$viewing_as = get_user_meta( $user_id, 'isr_view_sales_analysis_as', true );
+			if ( $viewing_as == null || $viewing_as == '' ) {
+				$viewing_as = $user_id;
+			}
 
-    }
+			global $wpdb;
+			$user              = get_user_by( 'id', $viewing_as );
+			$user_agent_number = get_user_meta( $viewing_as, 'agent_number', true );
+			$user_position     = strtolower( get_user_meta( $viewing_as, 'agent_position', true ) );
 
-    //Get agents working under supervision of the crrent logged-in user
-    function GetWorkForce( $user_id ){
+			$agentIDs    = array();
+			$SAAgentNums = array();
 
-        global $wpdb;
-        
-        $viewing_as = get_user_meta( $user_id, 'isr_view_sales_analysis_as', true );
+			//Add the logged in agent's details
+			$agentIDs[] = array(
+				'id'       => $user_agent_number,
+				'name'     => $user->first_name . ' ' . $user->last_name,
+				'indent'   => '0px',
+				'parentID' => '',
+				'position' => $user_position,
+			);
 
-        if( $viewing_as == null || $viewing_as == '' ){
-            $viewing_as = $user_id;
-        }
-        
-        $user = get_user_by( 'id', $viewing_as );
-        
-        $user_agent_number = get_user_meta( $viewing_as, 'agent_number', true );
+			//Get Agents
+			$table             = $wpdb->usermeta;
+			$query             = "SELECT user_id FROM %s WHERE meta_key = 'saNumber' AND meta_value = %s";
+			$prepare           = $wpdb->prepare( $query, $table, $user_agent_number );
+			$sa_agent_user_ids = $wpdb->get_results( $prepare );
 
-        $user_position = strtolower( get_user_meta( $viewing_as, 'agent_position', true ) );
-        
-        $agentIDs = array();
+			if ( sizeof( $sa_agent_user_ids ) > 0 ) {
 
-        $extraIDs = array();
+				foreach ( $sa_agent_user_ids as $sa_agent_user_id ) {
 
-        $extraIDsExt = array();
+					$agent           = get_user_by( 'id', $sa_agent_user_id->user_id );
+					$active_agent    = $this->active_agent( $agent->ID );
 
-        $SAAgentNums = array();
+					if ( !$active_agent ) {
+						continue;
+					}
 
-        $table = get_option( 'agents_table_name' );
+					$agent_number    = get_user_meta( $sa_agent_user_id->user_id, 'agent_number', true );
+					$user_position   = strtolower( get_user_meta( $sa_agent_user_id->user_id, 'agent_position', true ) );
 
-        //Add the logged in agent's details
-        array_push( $agentIDs, 
-            array( 
-                    'id' => $user_agent_number, 
-                    'name' => $user->first_name . ' ' . $user->last_name,
-                    'indent' => '0px',
-                    'parentID' => '',
-                    'position' => $user_position,
-                )
-        );        
+					$agentIDs[] = array(
+						'id'       => $agent_number,
+						'name'     => $agent->first_name . ' ' . $agent->last_name,
+						'indent'   => '20px',
+						'parentID' => $user_agent_number,
+						'position' => $user_position,
+					);
 
-        //Get Agents
-        $sa_agent_user_ids =   $wpdb->get_results(
-            "SELECT user_id FROM $wpdb->usermeta " . 
-            "WHERE meta_key = 'saNumber' AND meta_value = " . $user_agent_number
-        );
+					$SAAgentNums[] = $agent_number;
+				}
 
-        
-        if( sizeof( $sa_agent_user_ids ) > 0 ){
-            
-            foreach( $sa_agent_user_ids as $sa_agent_user_id ){
-                
-                $agent = get_user_by( 'id', $sa_agent_user_id->user_id );
-                
-                $agent_number = get_user_meta( $sa_agent_user_id->user_id, 'agent_number', true );
-                
-                $user_position = strtolower( get_user_meta( $sa_agent_user_id->user_id, 'agent_position', true ) );
-                
-                $user_visibility = strtolower ( get_user_meta( $sa_agent_user_id->user_id, 'is_dashboard_visible', true ) );
-                
-                if ($user_visibility === 'false') {
-                    continue;
-                }
-    
-                array_push( $agentIDs, 
-                array( 
-                    'id' => $agent_number, 
-                            'name' => $agent->first_name . ' ' . $agent->last_name,
-                            'indent' => '20px',
-                            'parentID' => $user_agent_number,
-                            'position' => $user_position,
-                            )
-                );
-                
-                array_push( $SAAgentNums, $agent_number );
-                
-            }
- 
-            $extraIDs = $this->getRegularAgents( $SAAgentNums, '40px' );
+				$extraIDs = $this->getRegularAgents( $SAAgentNums, '40px' );
 
-            $juniorIDs = array();
+				$juniorIDs = array();
 
-            foreach ( $extraIDs['ids'] as $agent ) {
-                if ($agent['position'] == 'junior partner') {
-                    array_push( $juniorIDs, $agent['id'] );  
-                }
-            }
+				foreach ( $extraIDs['ids'] as $agent ) {
+					if ( $agent['position'] == 'junior partner' ) {
+						$juniorIDs[] = $agent['id'];
+					}
+				}
 
-            $extraIDsExt = $this->getRegularAgents( $juniorIDs, '60px' );
+				$extraIDsExt = $this->getRegularAgents( $juniorIDs, '60px' );
 
-            // if( $user_position == 'agency owner' ){
+				// if( $user_position == 'agency owner' ){
 
-            //     $extraIDsExt = $this->getRegularAgents( $extraIDs[ 'extras' ], '60px' );
+				//     $extraIDsExt = $this->getRegularAgents( $extraIDs[ 'extras' ], '60px' );
 
-            // }
+				// }
 
-            if( sizeof( $extraIDs ) > 0 ){
-                $agentIDs = array_merge( $agentIDs, $extraIDs[ 'ids' ] );
-            }
+				if ( sizeof( $extraIDs ) > 0 ) {
+					$agentIDs = array_merge( $agentIDs, $extraIDs['ids'] );
+				}
 
-            if( sizeof( $extraIDsExt ) > 0 ){
-                $agentIDs = array_merge( $agentIDs, $extraIDsExt[ 'ids' ] );
-            }
+				if ( sizeof( $extraIDsExt ) > 0 ) {
+					$agentIDs = array_merge( $agentIDs, $extraIDsExt['ids'] );
+				}
 
-        }
-        
-        return $agentIDs;
+			}
 
-    }
+			return $agentIDs;
+		}
 
-    function getRegularAgents( $nums, $indent ) {
-        
-        global $wpdb;
+		function getRegularAgents( $nums, $indent ): array {
 
-        $extraIDsSub = array();
+			global $wpdb;
+			$table = $wpdb->prefix . 'usermeta';
+			$extraIDsSub = array();
+			$extraAgentNums = array();
 
-        $extraAgentNums = array();
+			foreach ( $nums as $num ) {
+				$query = "SELECT user_id FROM $table WHERE meta_key = 'saNumber' AND meta_value = '%s'";
+				$prepare = $wpdb->prepare( $query, $num );
+				$agent_user_ids = $wpdb->get_results( $prepare );
 
-        foreach( $nums as $num ){
+				foreach ( $agent_user_ids as $agent_user_id ) {
 
-            $agent_user_ids =   $wpdb->get_results(
-                "SELECT user_id FROM " . $wpdb->prefix . "usermeta " . 
-                "WHERE meta_key='saNumber' AND meta_value='" . $num . "'"
-            );
+					$agent = get_user_by( 'id', $agent_user_id->user_id );
+					$active_agent = $this->active_agent( $agent->ID );
 
-            foreach( $agent_user_ids as $agent_user_id ){
+					if ( !$active_agent ) {
+						continue;
+					}
 
-                $agent = get_user_by( 'id', $agent_user_id->user_id );
+					$agent_number = get_user_meta( $agent_user_id->user_id, 'agent_number', true );
+					$user_position = strtolower( get_user_meta( $agent_user_id->user_id, 'agent_position', true ) );
 
-                $agent_number = get_user_meta( $agent_user_id->user_id, 'agent_number', true );
 
-                $user_position = strtolower( get_user_meta( $agent_user_id->user_id, 'agent_position', true ) );
+					$extraIDsSub[] = array(
+						'id'       => $agent_number,
+						'name'     => $agent->first_name . ' ' . $agent->last_name,
+						'indent'   => $indent,
+						'parentID' => $num,
+						'position' => $user_position,
+					);
 
-                $user_visibility = strtolower ( get_user_meta( $agent_user_id->user_id, 'is_dashboard_visible', true ) );
+					$extraAgentNums[] = $agent_number;
+				}
 
-                if ($user_visibility === 'false') {
-                    continue;
-                }
+			}
 
-                array_push( $extraIDsSub, 
-                    array( 
-                            'id' => $agent_number, 
-                            'name' => $agent->first_name . ' ' . $agent->last_name,
-                            'indent' => $indent,
-                            'parentID' => $num,
-                            'position' => $user_position,
-                        )
-                );
+			return array( 'ids' => $extraIDsSub, 'extras' => $extraAgentNums );
+		}
 
-                array_push( $extraAgentNums, $agent_number );
+		public function active_agent( $user_id ): bool {
+			$active    = get_user_meta( $user_id, 'is_dashboard_visible', true );
+			$new_agent = get_user_meta( $user_id, 'classroom_only', true );
 
-            }
-
-        }
-
-        return array( 'ids' => $extraIDsSub, 'extras' => $extraAgentNums );
-
-    }
-
-}
-
-?>
+			if ( $active === 'true' && ! $new_agent ) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
