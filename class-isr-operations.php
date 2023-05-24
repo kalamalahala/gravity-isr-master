@@ -50,14 +50,19 @@
 
 		//Get agents working under supervision of the currently logged-in user
 		function GetWorkForce( $user_id = null ): array {
+			$results = [];
 
 			if ( empty( $user_id ) ) {
 				$user_id = get_current_user_id();
 			}
+
 			$viewing_as = get_user_meta( $user_id, 'isr_view_sales_analysis_as', true );
 			if ( $viewing_as == null || $viewing_as == '' ) {
 				$viewing_as = $user_id;
 			}
+
+			$results['viewing_as'] = $viewing_as;
+			$results['user_id']    = $user_id;
 
 			global $wpdb;
 			$user              = get_user_by( 'id', $viewing_as );
@@ -78,9 +83,13 @@
 
 			//Get Agents
 			$table             = $wpdb->usermeta;
-			$query             = "SELECT user_id FROM %s WHERE meta_key = 'saNumber' AND meta_value = %s";
-			$prepare           = $wpdb->prepare( $query, $table, $user_agent_number );
+			$query             = "SELECT user_id FROM $table WHERE meta_key = 'saNumber' AND meta_value = %s";
+			$prepare           = $wpdb->prepare( $query, $user_agent_number );
 			$sa_agent_user_ids = $wpdb->get_results( $prepare );
+
+			$results['sa_agent_user_ids'] = $sa_agent_user_ids;
+			$results['sa_agent_user_ids']['error'] = $wpdb->last_error;
+			$results['sa_agent_user_ids']['query'] = $wpdb->last_query;
 
 			if ( sizeof( $sa_agent_user_ids ) > 0 ) {
 
@@ -106,6 +115,8 @@
 
 					$SAAgentNums[] = $agent_number;
 				}
+
+				$results['sa_agent_user_id'] = $agentIDs;
 
 				$extraIDs = $this->getRegularAgents( $SAAgentNums, '40px' );
 
@@ -134,6 +145,8 @@
 				}
 
 			}
+
+			$agentIDs['results'] = $results;
 
 			return $agentIDs;
 		}
