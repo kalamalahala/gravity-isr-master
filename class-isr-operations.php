@@ -4,6 +4,12 @@
 
 	class ISROps {
 
+		protected int $useless_local;
+
+		public function __construct() {
+			$this->useless_local = 0;
+		}
+
 		//Get appointment invite details
 		function GetInvites( $start_date, $end_date ): WP_Error|array {
 			if ( empty( $start_date ) ) {
@@ -193,13 +199,17 @@
 		}
 
 		public function active_agent( $user_id ): bool {
-			$active    = get_user_meta( $user_id, 'is_dashboard_visible', true );
-			$new_agent = get_user_meta( $user_id, 'classroom_only', true );
+			return $this->agent_flags( $user_id )['visible'] && ! $this->agent_flags( $user_id )['pre_licensing_agent'];
+		}
 
-			if ( $active === 'true' && ! $new_agent ) {
-				return true;
-			} else {
-				return false;
-			}
+		public function agent_flags( int $user_id ): array {
+			$visible = get_user_meta( $user_id, 'is_dashboard_visible', true ) == true;
+			$pre_licensing_agent = get_user_meta( $user_id, 'classroom_only', true ) == true;
+
+			return [
+				'user_id' => $user_id,
+				'visible' => $visible,
+				'pre_licensing_agent' => $pre_licensing_agent
+			];
 		}
 	}
