@@ -1,203 +1,326 @@
-#all-business-table,
-#referrals-business-table,
-#all-business-calcs-table,
-#referrals-business-calcs-table,
-#agent-stats-table,
-.agent-stats-cumulative-table {
-    font-size: 13px;
-}
-
-#all-business-table th,
-#referrals-business-table th,
-#all-business-calcs-table th,
-#referrals-business-calcs-table th,
-#agent-stats-table th,
-.agent-stats-cumulative-table th {
-    color: #023a51;
-}
-
-#all-business-table td,
-#referrals-business-table td,
-#all-business-calcs-table td,
-#referrals-business-calcs-table td,
-#agent-stats-table td,
-.agent-stats-cumulative-table td {
-    vertical-align: middle;
-}
-
-.cumulative-data-centered {
-    text-align: center;
-}
-
-.agent-stats-cumulative-table {
-    overflow-x: scroll;
-}
-
-.agent-stats-cumulative-table td.sub-heading {
-    font-weight: 700;
-}
-
-.agent-stats-cumulative-table tr > th.ab-cell {
-    color: #2cbc63;
-}
-
-.agent-stats-cumulative-table tr > th.rb-cell {
-    color: #015c8e;
-}
-
-.agent-stats-cumulative-table tr .sub-heading.ab-cell {
-    color: #2cbc63;
-}
-
-.agent-stats-cumulative-table tr .sub-heading.rb-cell {
-    color: #015c8e;
-}
-
-.heading-transparent {
-    color: transparent;
-}
-
-.agent-ap {
-    color: #2cbc63;
-    font-weight: 700;
-}
-
-.isr-date-label {
-    font-weight: 700;
-    font-size: 12px;
-}
-
-#referrals-collected {
-    color: #2cbc63;
-    font-weight: 700;
-}
-
-#invite-start-date,
-#invite-end-date,
-input.pres-value,
-input.sales-value {
-    font-weight: 700;
-    color: #023a51;
-    font-size: 15px;
-}
-
-#invite-start-date,
-#invite-end-date {
-    width: 180px;
-    text-indent: 10px;
-}
-
-.retrievalModalTrigger {
-    display: none;
-}
-
-#retrievalModal button.close {
-    display: none;
-}
-
-label[for="chkAllAgents"] {
-    color: #023a51;
-    font-weight: 700;
-}
-
-.is-user-agent + label.form-check-label {
-    font-weight: 700;
-}
-
-#workforce {
-    margin-left: 20px;
-    display: none;
-}
-
-#workforce label.form-check-label {
-    font-size: 14px;
-    position: relative;
-    top: -6px;
-}
-
-.spinner-border {
-    opacity: 0;
-}
-
-input[type="text"].datum-test {
-    display: none;
-    font-size: 13px;
-    font-weight: 700;
-    color: #000;
-    padding: 2px;
-    text-align: center;
-    height: 40px;
-    border: 2px solid #2cbc63;
-}
-
-input[type="text"].datum-test-on {
-    display: inline;
-}
-
-span.datum-test-val {
-    display: none;
-    margin-top: 4px;
-    font-weight: 700;
-    color: #2cbc63;
-}
-
-span.datum-test-val-on {
-    display: block;
-}
-
-.ci-edit {
-    max-width: 24px;
-    cursor: pointer;
-}
-
-.ci-edit-disabled {
-    max-width: 24px;
-    cursor: not-allowed;
-    opacity: 0.3;
-}
-
-.ci-search {
-    margin-left: 16px;
-}
-
-.referral-check,
-.sale-check {
-    width: 14px;
-}
-
-#period-container {
-    display: none;
-}
-
-.position-header {
-    color: #015c8e;
-}
-
-.selected-agent {
-    color: #15d16c; 
-    font-weight: 700;
-}
-
-.de-selected-agent {
-    color: unset; 
-    font-weight: 400;
-}
-
-.hide-agent-col {
-    display: none;
-}
-
-/* input[type="checkbox"].referral-check:disabled + label::before,
-input[type="checkbox"].sale-check:disabled + label::before {
-    background: #2cbc63;
-}
-
-input[type="checkbox"].referral-check:disabled + label:hover::before,
-input[type="checkbox"].sale-check:disabled + label:hover::before {
-    background: #2cbc63;
-    border: 1px solid #2cbc63;
-}
-
-.form-check-input:checked ~ label::before {
-    background-color: green!important;
-} */
+#all-business-table,
+#referrals-business-table,
+#all-business-calcs-table,
+#referrals-business-calcs-table,
+#agent-stats-table,
+.agent-stats-cumulative-table {
+    font-size: 13px;
+}
+
+#all-business-table th,
+#referrals-business-table th,
+#all-business-calcs-table th,
+#referrals-business-calcs-table th,
+#agent-stats-table th,
+.agent-stats-cumulative-table th {
+    color: #023a51;
+}
+
+#all-business-table td,
+#referrals-business-table td,
+#all-business-calcs-table td,
+#referrals-business-calcs-table td,
+#agent-stats-table td,
+.agent-stats-cumulative-table td {
+    vertical-align: middle;
+}
+
+.cumulative-data-centered {
+    text-align: center;
+}
+
+.agent-stats-cumulative-table {
+    overflow-x: scroll;
+}
+
+.agent-stats-cumulative-table td.sub-heading {
+    font-weight: 700;
+}
+
+.agent-stats-cumulative-table tr > th.ab-cell {
+    color: #2cbc63;
+}
+
+.agent-stats-cumulative-table tr > th.rb-cell {
+    color: #015c8e;
+}
+
+.agent-stats-cumulative-table tr .sub-heading.ab-cell {
+
+    color: #2cbc63;
+
+}
+
+
+.agent-stats-cumulative-table tr .sub-heading.rb-cell {
+
+    color: #015c8e;
+
+}
+
+
+.heading-transparent {
+
+    color: transparent;
+
+}
+
+
+.agent-ap {
+
+    color: #2cbc63;
+
+    font-weight: 700;
+
+}
+
+
+.isr-date-label {
+
+    font-weight: 700;
+
+    font-size: 12px;
+
+}
+
+
+#referrals-collected {
+
+    color: #2cbc63;
+
+    font-weight: 700;
+
+}
+
+
+#invite-start-date,
+#invite-end-date,
+input.pres-value,
+input.sales-value {
+
+    font-weight: 700;
+
+    color: #023a51;
+
+    font-size: 15px;
+
+}
+
+
+#invite-start-date,
+#invite-end-date {
+
+    width: 180px;
+
+    text-indent: 10px;
+
+}
+
+
+.retrievalModalTrigger {
+
+    display: none;
+
+}
+
+
+#retrievalModal button.close {
+
+    display: none;
+
+}
+
+
+label[for="chkAllAgents"] {
+
+    color: #023a51;
+
+    font-weight: 700;
+
+}
+
+
+.is-user-agent + label.form-check-label {
+
+    font-weight: 700;
+
+}
+
+
+#workforce {
+
+    margin-left: 20px;
+
+    display: none;
+
+}
+
+
+#workforce label.form-check-label {
+
+    font-size: 14px;
+
+    position: relative;
+
+    top: -6px;
+
+}
+
+
+.spinner-border {
+
+    opacity: 0;
+
+}
+
+
+input[type="text"].datum-test {
+
+    display: none;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    color: #000;
+
+    padding: 2px;
+
+    text-align: center;
+
+    height: 40px;
+
+    border: 2px solid #2cbc63;
+
+}
+
+
+input[type="text"].datum-test-on {
+
+    display: inline;
+
+}
+
+
+span.datum-test-val {
+
+    display: none;
+
+    margin-top: 4px;
+
+    font-weight: 700;
+
+    color: #2cbc63;
+
+}
+
+
+span.datum-test-val-on {
+
+    display: block;
+
+}
+
+
+.ci-edit {
+
+    max-width: 24px;
+
+    cursor: pointer;
+
+}
+
+
+.ci-edit-disabled {
+
+    max-width: 24px;
+
+    cursor: not-allowed;
+
+    opacity: 0.3;
+
+}
+
+
+.ci-search {
+
+    margin-left: 16px;
+
+}
+
+
+.referral-check,
+.sale-check {
+
+    width: 14px;
+
+}
+
+
+#period-container {
+
+    display: none;
+
+}
+
+
+.position-header {
+
+    color: #015c8e;
+
+}
+
+
+.selected-agent {
+
+    color: #15d16c;
+
+    font-weight: 700;
+
+}
+
+
+.de-selected-agent {
+
+    color: unset;
+
+    font-weight: 400;
+
+}
+
+
+.hide-agent-col {
+
+    display: none;
+
+}
+
+
+/* input[type="checkbox"].referral-check:disabled + label::before,
+
+input[type="checkbox"].sale-check:disabled + label::before {
+
+    background: #2cbc63;
+
+}
+
+
+
+input[type="checkbox"].referral-check:disabled + label:hover::before,
+
+input[type="checkbox"].sale-check:disabled + label:hover::before {
+
+    background: #2cbc63;
+
+    border: 1px solid #2cbc63;
+
+}
+
+
+
+.form-check-input:checked ~ label::before {
+
+    background-color: green!important;
+
+} */
+
